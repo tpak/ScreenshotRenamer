@@ -36,6 +36,11 @@ class MenuBarController: NSObject {
     // Auto-update
     private var updateManager: UpdateManager!
 
+    // Main-thread heartbeat (diagnostic for unresponsive menu bar reports)
+    private var heartbeatTimer: Timer?
+    private var heartbeatCount: Int = 0
+    private let heartbeatStart = Date()
+
     override init() {
         super.init()
         print("📋 MenuBarController initializing...")
@@ -52,7 +57,29 @@ class MenuBarController: NSObject {
         }
         SettingsSnapshot.save() // Persist current known-good state
         autoStartWatcher()
+        startHeartbeat()
         print("📋 MenuBarController initialized")
+    }
+
+    // A gap between heartbeats means the main run loop was stalled;
+    // continuous beats while the icon is reported unresponsive points
+    // at NSStatusItem itself, not at us.
+    private func startHeartbeat() {
+        let timer = Timer(timeInterval: 60.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            self.heartbeatCount += 1
+            let uptime = Int(Date().timeIntervalSince(self.heartbeatStart))
+            let watcherState = self.watcher?.isRunning == true ? "running" : "stopped"
+            os_log("Heartbeat #%d uptime=%ds watcher=%{public}@",
+                   log: .default, type: .info,
+                   self.heartbeatCount, uptime, watcherState)
+            DebugLogger.shared.log(
+                "Heartbeat #\(self.heartbeatCount) uptime=\(uptime)s watcher=\(watcherState)",
+                category: "App"
+            )
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        heartbeatTimer = timer
     }
 
     /// Setup menu bar status item
