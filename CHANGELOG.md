@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.14.2] - 2026-05-21
+
+### Added
+- **Main-thread heartbeat logging** — 60s diagnostic timer logs to `os_log` and `~/Library/Logs/ScreenshotRenamer/screenshotrenamer-debug.log` (when debug enabled). Gaps between heartbeats indicate a stalled main run loop; continuous beats during an unresponsive menu bar icon point at NSStatusItem itself.
+- **Integration tests for `ScreenshotWatcher`** — exercise FSEvents wiring, the 300ms debounce, and the end-to-end rename flow (test count: 79 → 82).
+
 ## [1.12.0] - 2026-03-17
 
 ### Changed
