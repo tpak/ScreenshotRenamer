@@ -1,8 +1,8 @@
 # Screenshot Renamer
 
-[![CI/CD](https://img.shields.io/github/actions/workflow/status/tpak/ScreenshotRenamer/swift.yml?branch=main&label=CI%2FCD)](https://github.com/tpak/ScreenshotRenamer/actions/workflows/swift.yml)
-[![CodeQL](https://img.shields.io/github/actions/workflow/status/tpak/ScreenshotRenamer/codeql.yml?branch=main&label=CodeQL)](https://github.com/tpak/ScreenshotRenamer/actions/workflows/codeql.yml)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/tpak/ScreenshotRenamer)](https://github.com/tpak/ScreenshotRenamer/releases/latest)
+[![CI](https://github.com/tpak/ScreenshotRenamer/actions/workflows/swift.yml/badge.svg?branch=main)](https://github.com/tpak/ScreenshotRenamer/actions/workflows/swift.yml)
+[![CodeQL](https://github.com/tpak/ScreenshotRenamer/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/tpak/ScreenshotRenamer/actions/workflows/codeql.yml)
+[![Latest release](https://img.shields.io/github/v/release/tpak/ScreenshotRenamer?display_name=tag&sort=semver)](https://github.com/tpak/ScreenshotRenamer/releases/latest)
 
 Native macOS menu bar app that automatically renames screenshots from 12-hour to 24-hour format so they sort chronologically in Finder.
 

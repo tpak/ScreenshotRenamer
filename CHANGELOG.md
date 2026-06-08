@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-06-08
+
+### Changed
+- **Sparkle updated 2.8.1 → 2.9.2** — pulls in two upstream security fixes: a symlink guard when applying delta updates, and validation of the installer connection before appcast item data is received. Also includes appcast improvements and localization/accessibility polish.
+
+### Documentation
+- **README badges reworked** — added a CodeQL status badge, renamed the CI badge to "CI" (workflow renamed from "Swift CI" → "CI"), switched the release badge to semver tag display, and removed the redundant License and Platform badges. Badge style now matches the other tpak projects.
+
 ## [1.14.2] - 2026-05-21
 
 ### Added
