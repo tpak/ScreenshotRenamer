@@ -32,9 +32,13 @@ fi
 VERSION=$(cat VERSION | tr -d '[:space:]')
 echo "📌 Version: $VERSION"
 
-# Backup original Info.plist
+# Backup original Info.plist outside the source tree, so SPM doesn't scan the
+# backup as an unhandled resource during the build. Restore on exit (via trap)
+# so a failed build never leaves an injected Info.plist in the working tree.
 PLIST_PATH="Sources/ScreenshotRenamer/Resources/Info.plist"
-cp "$PLIST_PATH" "$PLIST_PATH.backup"
+PLIST_BACKUP="$(mktemp -t screenshotrenamer-infoplist)"
+cp "$PLIST_PATH" "$PLIST_BACKUP"
+trap 'mv -f "$PLIST_BACKUP" "$PLIST_PATH"' EXIT
 
 # Inject version into Info.plist
 ./Scripts/inject-version.sh
@@ -57,8 +61,9 @@ install_name_tool -add_rpath @loader_path/../Frameworks "$APP_DIR/MacOS/Screensh
 # Copy Info.plist (with version injected) to app bundle
 cp Sources/ScreenshotRenamer/Resources/Info.plist "$APP_DIR/"
 
-# Restore original Info.plist in source tree
-mv "$PLIST_PATH.backup" "$PLIST_PATH"
+# Restore original Info.plist in source tree (also handled by the EXIT trap)
+mv -f "$PLIST_BACKUP" "$PLIST_PATH"
+trap - EXIT
 
 # Copy app icon
 cp Sources/ScreenshotRenamer/Resources/AppIcon.icns "$APP_DIR/Resources/"
