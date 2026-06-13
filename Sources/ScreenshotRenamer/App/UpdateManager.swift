@@ -16,7 +16,7 @@ private class UpdateDelegate: NSObject, SPUUpdaterDelegate {
         DebugLogger.shared.log(message, category: "Update")
     }
 
-    func updater(_ updater: SPUUpdater, didFinishLoadingAppcast appcast: SUAppcast) {
+    func updater(_ updater: SPUUpdater, didFinishLoading appcast: SUAppcast) {
         log("Sparkle loaded appcast with \(appcast.items.count) item(s)")
     }
 
@@ -28,7 +28,7 @@ private class UpdateDelegate: NSObject, SPUUpdaterDelegate {
         log("Sparkle did not find an installable update")
     }
 
-    func updater(_ updater: SPUUpdater, didAbortWithError error: NSError) {
+    func updater(_ updater: SPUUpdater, didAbortWithError error: Error) {
         log("Sparkle aborted update: \(error.localizedDescription)", type: .error)
     }
 
