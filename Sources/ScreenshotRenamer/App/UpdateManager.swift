@@ -25,7 +25,7 @@ private class UpdateDelegate: NSObject, SPUUpdaterDelegate {
     }
 
     func updaterDidNotFindUpdate(_ updater: SPUUpdater, error: NSError) {
-        log("Sparkle did not find update: \(error.localizedDescription)")
+        log("Sparkle did not find an installable update: \(error.localizedDescription)")
     }
 
     func updater(_ updater: SPUUpdater, didAbortWithError error: NSError) {

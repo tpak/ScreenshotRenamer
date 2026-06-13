@@ -68,7 +68,9 @@ class DebugLogger {
             // Ensure parent directory exists
             let dir = url.deletingLastPathComponent()
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            self.rotateLogIfNeeded(at: url, incomingBytes: UInt64(entryData.count))
+            guard self.rotateLogIfNeeded(at: url, incomingBytes: UInt64(entryData.count)) else {
+                return
+            }
 
             if FileManager.default.fileExists(atPath: url.path) {
                 // Append to existing file
@@ -98,14 +100,19 @@ class DebugLogger {
         queue.sync {}
     }
 
-    private func rotateLogIfNeeded(at url: URL, incomingBytes: UInt64) {
-        guard FileManager.default.fileExists(atPath: url.path) else { return }
+    private func rotateLogIfNeeded(at url: URL, incomingBytes: UInt64) -> Bool {
+        guard FileManager.default.fileExists(atPath: url.path) else { return true }
         let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
         let currentSize = (attributes?[.size] as? NSNumber)?.uint64Value ?? 0
-        guard currentSize + incomingBytes > Self.maxFileSizeBytes else { return }
+        guard currentSize + incomingBytes > Self.maxFileSizeBytes else { return true }
 
         let archivedURL = Self.archivedLogFileURL(for: url)
-        try? FileManager.default.removeItem(at: archivedURL)
-        try? FileManager.default.moveItem(at: url, to: archivedURL)
+        do {
+            try? FileManager.default.removeItem(at: archivedURL)
+            try FileManager.default.moveItem(at: url, to: archivedURL)
+            return true
+        } catch {
+            return false
+        }
     }
 }
