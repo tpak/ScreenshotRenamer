@@ -132,8 +132,8 @@ class DebugLoggerTests: XCTestCase {
         let currentContents = try String(contentsOf: testLogURL, encoding: .utf8)
         let archivedContents = try String(contentsOf: archivedURL, encoding: .utf8)
         XCTAssertTrue(currentContents.contains("rotated entry"))
-        XCTAssertFalse(currentContents.contains("x"))
-        XCTAssertTrue(archivedContents.contains("x"))
+        XCTAssertFalse(currentContents.contains(largeLogMarker()))
+        XCTAssertTrue(archivedContents.contains(largeLogMarker()))
     }
 
     func testClearRemovesArchivedLog() {
@@ -153,6 +153,11 @@ class DebugLoggerTests: XCTestCase {
     }
 
     private func largeLogMessage() -> String {
-        String(repeating: "x", count: Int(DebugLogger.maxFileSizeBytes))
+        let repetitions = Int(DebugLogger.maxFileSizeBytes) / largeLogMarker().count + 1
+        return String(repeating: largeLogMarker(), count: repetitions)
+    }
+
+    private func largeLogMarker() -> String {
+        "LARGE_LOG_MARKER"
     }
 }
