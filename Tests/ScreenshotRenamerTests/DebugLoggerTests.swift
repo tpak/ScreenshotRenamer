@@ -118,4 +118,41 @@ class DebugLoggerTests: XCTestCase {
             "Log file should be removed after clear"
         )
     }
+
+    func testLogRotationArchivesPreviousLog() throws {
+        DebugLogger.shared.isEnabled = true
+        DebugLogger.shared.log(largeLogMessage(), category: "Test")
+        DebugLogger.shared.flush()
+        DebugLogger.shared.log("rotated entry", category: "Test")
+        DebugLogger.shared.flush()
+
+        let archivedURL = DebugLogger.archivedLogFileURL(for: testLogURL)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: archivedURL.path))
+
+        let currentContents = try String(contentsOf: testLogURL, encoding: .utf8)
+        let archivedContents = try String(contentsOf: archivedURL, encoding: .utf8)
+        XCTAssertTrue(currentContents.contains("rotated entry"))
+        XCTAssertFalse(currentContents.contains("x"))
+        XCTAssertTrue(archivedContents.contains("x"))
+    }
+
+    func testClearRemovesArchivedLog() {
+        DebugLogger.shared.isEnabled = true
+        DebugLogger.shared.log(largeLogMessage(), category: "Test")
+        DebugLogger.shared.flush()
+        DebugLogger.shared.log("rotated entry", category: "Test")
+        DebugLogger.shared.flush()
+
+        let archivedURL = DebugLogger.archivedLogFileURL(for: testLogURL)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: archivedURL.path))
+
+        DebugLogger.shared.clear()
+        DebugLogger.shared.flush()
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: archivedURL.path))
+    }
+
+    private func largeLogMessage() -> String {
+        String(repeating: "x", count: Int(DebugLogger.maxFileSizeBytes))
+    }
 }

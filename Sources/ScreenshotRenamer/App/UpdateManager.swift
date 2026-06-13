@@ -11,11 +11,29 @@ import os.log
 
 /// Handles Sparkle updater delegate callbacks
 private class UpdateDelegate: NSObject, SPUUpdaterDelegate {
+    private func log(_ message: String, type: OSLogType = .info) {
+        os_log("%{public}@", log: .default, type: type, message)
+        DebugLogger.shared.log(message, category: "Update")
+    }
+
+    func updater(_ updater: SPUUpdater, didFinishLoadingAppcast appcast: SUAppcast) {
+        log("Sparkle loaded appcast with \(appcast.items.count) item(s)")
+    }
+
+    func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
+        log("Sparkle found update: \(item.displayVersionString)")
+    }
+
+    func updaterDidNotFindUpdate(_ updater: SPUUpdater, error: NSError) {
+        log("Sparkle did not find update: \(error.localizedDescription)")
+    }
+
+    func updater(_ updater: SPUUpdater, didAbortWithError error: NSError) {
+        log("Sparkle aborted update: \(error.localizedDescription)", type: .error)
+    }
+
     func updater(_ updater: SPUUpdater, willInstallUpdate item: SUAppcastItem) {
-        os_log("Sparkle willInstallUpdate: %{public}@", log: .default, type: .info,
-               item.displayVersionString)
-        DebugLogger.shared.log("Sparkle willInstallUpdate: \(item.displayVersionString)",
-                               category: "Update")
+        log("Sparkle willInstallUpdate: \(item.displayVersionString)")
         SettingsSnapshot.save()
     }
 }
@@ -30,6 +48,10 @@ class UpdateManager {
             startingUpdater: true,
             updaterDelegate: delegate,
             userDriverDelegate: nil
+        )
+        DebugLogger.shared.log(
+            "Sparkle updater initialized (autoChecks=\(updaterController.updater.automaticallyChecksForUpdates), autoDownloads=\(updaterController.updater.automaticallyDownloadsUpdates))",
+            category: "Update"
         )
     }
 
