@@ -79,7 +79,7 @@ class DebugLogger {
                 }
             } else {
                 // Create new file
-                try? entryData.write(to: url)
+                try? entryData.write(to: url, options: .atomic)
             }
         }
     }
