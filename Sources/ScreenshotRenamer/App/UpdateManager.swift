@@ -49,8 +49,10 @@ class UpdateManager {
             updaterDelegate: delegate,
             userDriverDelegate: nil
         )
+        let autoChecks = updaterController.updater.automaticallyChecksForUpdates
+        let autoDownloads = updaterController.updater.automaticallyDownloadsUpdates
         DebugLogger.shared.log(
-            "Sparkle updater initialized (autoChecks=\(updaterController.updater.automaticallyChecksForUpdates), autoDownloads=\(updaterController.updater.automaticallyDownloadsUpdates))",
+            "Sparkle updater initialized (autoChecks=\(autoChecks), autoDownloads=\(autoDownloads))",
             category: "Update"
         )
     }
