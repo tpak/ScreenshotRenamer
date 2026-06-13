@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.1] - 2026-06-13
+
 ### Fixed
 - **Auto-update checks now start automatically for fresh installs** — Sparkle no longer depends on the second-launch permission prompt before scheduling weekly background update checks.
 - **Debug log rotation** — `screenshotrenamer-debug.log` now rotates to `screenshotrenamer-debug.log.1` when it grows past 1 MiB, and Clear removes both files.
+
+### Changed
+- **Updater diagnostics** — Sparkle lifecycle events (appcast loaded, update found/not found, aborted, installing) are now recorded in the debug log for easier troubleshooting.
 
 ## [1.15.0] - 2026-06-08
 
