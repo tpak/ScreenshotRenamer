@@ -13,7 +13,6 @@ class DebugLogger {
     static let maxFileSizeBytes: UInt64 = 1_048_576
 
     private let queue = DispatchQueue(label: "com.screenshot-renamer.debug-logger", qos: .utility)
-    private let formatter = ISO8601DateFormatter()
 
     private static let enabledKey = "DebugLoggingEnabled"
     private static let logFileURLKey = "DebugLogFileURL"
@@ -57,7 +56,7 @@ class DebugLogger {
     func log(_ message: String, category: String) {
         guard isEnabled else { return }
 
-        let timestamp = formatter.string(from: Date())
+        let timestamp = ISO8601DateFormatter().string(from: Date())
         let entry = "[\(timestamp)] [\(category)] \(message)\n"
         let entryData = Data(entry.utf8)
 
