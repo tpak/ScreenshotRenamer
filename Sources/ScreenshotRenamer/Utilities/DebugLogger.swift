@@ -10,6 +10,7 @@ import Foundation
 /// Singleton debug logger that writes timestamped entries to a log file
 class DebugLogger {
     static let shared = DebugLogger()
+    static let maxFileSizeBytes: UInt64 = 1_048_576
 
     private let queue = DispatchQueue(label: "com.screenshot-renamer.debug-logger", qos: .utility)
 
@@ -42,6 +43,10 @@ class DebugLogger {
         return logsDir.appendingPathComponent("screenshotrenamer-debug.log")
     }
 
+    static func archivedLogFileURL(for url: URL) -> URL {
+        url.appendingPathExtension("1")
+    }
+
     private init() {}
 
     /// Log a message with a category tag
@@ -53,6 +58,7 @@ class DebugLogger {
 
         let timestamp = ISO8601DateFormatter().string(from: Date())
         let entry = "[\(timestamp)] [\(category)] \(message)\n"
+        let entryData = Data(entry.utf8)
 
         queue.async { [weak self] in
             guard let self = self else { return }
@@ -61,19 +67,20 @@ class DebugLogger {
             // Ensure parent directory exists
             let dir = url.deletingLastPathComponent()
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            guard self.rotateLogIfNeeded(at: url, incomingBytes: UInt64(entryData.count)) else {
+                return
+            }
 
             if FileManager.default.fileExists(atPath: url.path) {
                 // Append to existing file
                 if let handle = try? FileHandle(forWritingTo: url) {
                     handle.seekToEndOfFile()
-                    if let data = entry.data(using: .utf8) {
-                        handle.write(data)
-                    }
+                    handle.write(entryData)
                     handle.closeFile()
                 }
             } else {
                 // Create new file
-                try? entry.write(to: url, atomically: true, encoding: .utf8)
+                try? entryData.write(to: url, options: .atomic)
             }
         }
     }
@@ -83,11 +90,28 @@ class DebugLogger {
         queue.async { [weak self] in
             guard let self = self else { return }
             try? FileManager.default.removeItem(at: self.logFileURL)
+            try? FileManager.default.removeItem(at: Self.archivedLogFileURL(for: self.logFileURL))
         }
     }
 
     /// Flush pending writes (blocks until queue drains). Useful for tests.
     func flush() {
         queue.sync {}
+    }
+
+    private func rotateLogIfNeeded(at url: URL, incomingBytes: UInt64) -> Bool {
+        guard FileManager.default.fileExists(atPath: url.path) else { return true }
+        let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
+        let currentSize = (attributes?[.size] as? NSNumber)?.uint64Value ?? 0
+        guard currentSize + incomingBytes > Self.maxFileSizeBytes else { return true }
+
+        let archivedURL = Self.archivedLogFileURL(for: url)
+        do {
+            try? FileManager.default.removeItem(at: archivedURL)
+            try FileManager.default.moveItem(at: url, to: archivedURL)
+            return true
+        } catch {
+            return false
+        }
     }
 }

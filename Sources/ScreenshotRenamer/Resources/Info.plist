@@ -18,6 +18,10 @@
 	<string>1.15.0</string>
 	<key>CFBundleVersion</key>
 	<string>1.15.0</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>604800</integer>
 	<key>LSMinimumSystemVersion</key>
 	<string>11.0</string>
 	<key>LSUIElement</key>
