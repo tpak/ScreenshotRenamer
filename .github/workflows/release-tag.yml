@@ -23,7 +23,7 @@ jobs:
           echo "Tag: $TAG_NAME, Version: $VERSION"
 
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.get_version.outputs.TAG_NAME }}
 
