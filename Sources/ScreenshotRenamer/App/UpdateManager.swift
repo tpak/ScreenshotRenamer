@@ -43,18 +43,46 @@ class UpdateManager {
     let updaterController: SPUStandardUpdaterController
     private let delegate = UpdateDelegate()
 
-    init() {
+    init(defaults: UserDefaults = .standard) {
         updaterController = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: delegate,
             userDriverDelegate: nil
         )
+        applyAutoCheckMigration(defaults: defaults)
         let autoChecks = updaterController.updater.automaticallyChecksForUpdates
         let autoDownloads = updaterController.updater.automaticallyDownloadsUpdates
         DebugLogger.shared.log(
             "Sparkle updater initialized (autoChecks=\(autoChecks), autoDownloads=\(autoDownloads))",
             category: "Update"
         )
+    }
+
+    /// Issue #42: ensure automatic update checks are enabled for existing users.
+    ///
+    /// Builds ≤1.14.2 shipped without `SUEnableAutomaticChecks`, so Sparkle relied on
+    /// a first-launch permission prompt to start background checks. On this menu-bar
+    /// (`LSUIElement`) app that prompt path is unreliable, so many users never had
+    /// checks enabled and silently stopped receiving updates. The Info.plist default
+    /// added in 1.15.1 only covers fresh installs — it can't reach a client that
+    /// isn't checking — so this one-time migration force-enables checks for existing
+    /// users on their next launch of a build that contains it.
+    private func applyAutoCheckMigration(defaults: UserDefaults) {
+        let applied = defaults.bool(forKey: AutoUpdateMigration.defaultsKey)
+        let updater = updaterController.updater
+        if AutoUpdateMigration.shouldEnableChecks(
+            migrationApplied: applied,
+            currentlyEnabled: updater.automaticallyChecksForUpdates
+        ) {
+            updater.automaticallyChecksForUpdates = true
+            DebugLogger.shared.log(
+                "Auto-update checks were off; force-enabled via one-time migration (issue #42)",
+                category: "Update"
+            )
+        }
+        if !applied {
+            defaults.set(true, forKey: AutoUpdateMigration.defaultsKey)
+        }
     }
 
     var automaticallyChecksForUpdates: Bool {
@@ -92,5 +120,19 @@ class UpdateManager {
             let sorted = allCases.sorted { abs($0.rawValue - interval) < abs($1.rawValue - interval) }
             return sorted.first ?? .weekly
         }
+    }
+}
+
+/// One-time migration policy for re-enabling automatic update checks (issue #42).
+enum AutoUpdateMigration {
+    /// UserDefaults key recording that the migration has already run.
+    static let defaultsKey = "AutoCheckMigrationApplied"
+
+    /// Whether the one-time migration should force-enable automatic checks.
+    ///
+    /// Acts only when the migration has not yet run *and* checks are currently off,
+    /// so a user who deliberately disables checks after the migration is respected.
+    static func shouldEnableChecks(migrationApplied: Bool, currentlyEnabled: Bool) -> Bool {
+        !migrationApplied && !currentlyEnabled
     }
 }

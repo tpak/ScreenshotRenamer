@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.2] - 2026-06-28
+
+### Fixed
+- **Auto-update checks are now reliably enabled for existing users** (#42) — a one-time migration force-enables background update checks on launch. Builds ≤1.14.2 shipped without `SUEnableAutomaticChecks` and relied on a first-launch permission prompt that this menu-bar app never reliably surfaced, so many users silently stopped receiving updates. A user who later disables checks in Settings is still respected.
+
+### Changed
+- **Default update-check frequency is now daily** (was weekly) so new releases reach users sooner.
+- **Sparkle updated 2.9.2 → 2.9.3** — upstream bug fixes.
+
+### Removed
+- **Removed the broken "Release Latest Build" CI workflow** — it failed on every push to `main` because GitHub's immutable-releases feature permanently locks the reused `latest` tag. Releases are owned solely by `Scripts/release.sh`.
+
+### Internal
+- Bumped `actions/checkout` 6 → 7 across CI workflows.
+
 ## [1.15.1] - 2026-06-13
 
 ### Fixed
