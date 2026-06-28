@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.2] - 2026-06-28
+
 ### Fixed
 - **Auto-update checks are now reliably enabled for existing users** (#42) — a one-time migration force-enables background update checks on launch. Builds ≤1.14.2 shipped without `SUEnableAutomaticChecks` and relied on a first-launch permission prompt that this menu-bar app never reliably surfaced, so many users silently stopped receiving updates. A user who later disables checks in Settings is still respected.
 
