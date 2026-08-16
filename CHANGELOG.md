@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-08-16
+
+### Added
+- **Run in background (hide menu bar icon)** (#33) — a new App Option in Settings hides the menu bar icon while screenshots keep being renamed. Because the app has no dock icon either, launching Screenshot Renamer again reopens the Settings window instead of starting a second instance. While the icon is hidden that window floats above other apps and the app takes a temporary Dock icon for as long as it is open, and a **Quit App** button appears in Settings so the app can still be stopped. Enabling the option asks for confirmation and spells out how to get back in. Off by default — existing users keep their menu bar icon.
+
+### Security
+- **Sparkle updated 2.9.3 → 2.9.5** — includes a symlink hardening fix for delta patching (a more complete fix for the issue first addressed in 2.9.2), plus a fix for backgrounded/dockless apps not bringing user-initiated windows into focus, which matters directly for this app.
+
+### Internal
+- Pinned `github/codeql-action` to 4.37.3 (was the floating `v4` tag) in the CodeQL workflow.
+- Added `BackgroundModeManagerTests` — 95 tests now pass.
+
 ## [1.15.2] - 2026-06-28
 
 ### Fixed

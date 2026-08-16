@@ -10,7 +10,7 @@ import UniformTypeIdentifiers
 
 // swiftlint:disable type_body_length function_body_length file_length
 
-class SettingsWindowController: NSWindowController, NSTextFieldDelegate {
+class SettingsWindowController: NSWindowController, NSTextFieldDelegate, NSWindowDelegate {
     private let detector: ScreenshotDetector
     private let updateManager: UpdateManager
     private var onSettingsChanged: (() -> Void)?
@@ -28,6 +28,12 @@ class SettingsWindowController: NSWindowController, NSTextFieldDelegate {
     private var autoCheckUpdatesCheckbox: NSButton!
     private var updateFrequencyPopup: NSPopUpButton!
     private var autoDownloadUpdatesCheckbox: NSButton!
+    private var runInBackgroundCheckbox: NSButton!
+    private var quitButton: NSButton!
+
+    /// Set while this window forced the app out of `.accessory` so it could come
+    /// to the front — cleared (and the policy restored) when the window closes.
+    private var didElevateActivationPolicy = false
 
     // Debug UI Elements
     private var debugEnableCheckbox: NSButton!
@@ -39,7 +45,7 @@ class SettingsWindowController: NSWindowController, NSTextFieldDelegate {
         self.onSettingsChanged = onSettingsChanged
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 550, height: 650),
+            contentRect: NSRect(x: 0, y: 0, width: 550, height: 672),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -49,6 +55,7 @@ class SettingsWindowController: NSWindowController, NSTextFieldDelegate {
 
         super.init(window: window)
 
+        window.delegate = self
         setupUI()
         loadCurrentSettings()
     }
@@ -245,6 +252,19 @@ class SettingsWindowController: NSWindowController, NSTextFieldDelegate {
         )
         contentView.addSubview(autoDownloadUpdatesCheckbox)
 
+        currentY -= 22
+
+        runInBackgroundCheckbox = createCheckbox(
+            "Run in background (hide menu bar icon)",
+            x: controlX,
+            y: currentY,
+            action: #selector(toggleRunInBackground)
+        )
+        runInBackgroundCheckbox.toolTip =
+            "Keeps renaming screenshots with no menu bar icon. "
+            + "Launch Screenshot Renamer again to reopen this window."
+        contentView.addSubview(runInBackgroundCheckbox)
+
         currentY -= 30
 
         // ============================================================
@@ -335,6 +355,15 @@ class SettingsWindowController: NSWindowController, NSTextFieldDelegate {
         resetButton.action = #selector(resetToDefaults)
         contentView.addSubview(resetButton)
 
+        // Only affordance to quit once the menu bar icon is hidden, so it is
+        // shown exactly when background mode is on (see loadCurrentSettings).
+        quitButton = NSButton(frame: NSRect(x: margin + 130, y: currentY, width: 90, height: 28))
+        quitButton.title = "Quit App"
+        quitButton.bezelStyle = .rounded
+        quitButton.target = self
+        quitButton.action = #selector(quitApp)
+        contentView.addSubview(quitButton)
+
         let closeButton = NSButton(frame: NSRect(x: 450, y: currentY, width: 80, height: 28))
         closeButton.title = "Close"
         closeButton.bezelStyle = .rounded
@@ -394,6 +423,10 @@ class SettingsWindowController: NSWindowController, NSTextFieldDelegate {
         updateFrequencyPopup.selectItem(withTitle: currentFrequency.title)
         updateFrequencyPopup.isEnabled = updateManager.automaticallyChecksForUpdates
         autoDownloadUpdatesCheckbox.state = updateManager.automaticallyDownloadsUpdates ? .on : .off
+
+        let backgroundMode = BackgroundModeManager.shared.isEnabled
+        runInBackgroundCheckbox.state = backgroundMode ? .on : .off
+        quitButton.isHidden = !backgroundMode
 
         switch prefs.format {
         case .png: formatPopup.selectItem(withTitle: "PNG")
@@ -580,6 +613,45 @@ class SettingsWindowController: NSWindowController, NSTextFieldDelegate {
     }
 
     @objc
+    private func toggleRunInBackground() {
+        let enabled = runInBackgroundCheckbox.state == .on
+
+        // Turning this on removes the app's only visible affordance, so make the
+        // way back explicit before committing to it (issue #33).
+        if enabled, !confirmBackgroundMode() {
+            runInBackgroundCheckbox.state = .off
+            return
+        }
+
+        BackgroundModeManager.shared.isEnabled = enabled
+        quitButton.isHidden = !enabled
+        DebugLogger.shared.log("Run in background set to \(enabled)", category: "App")
+        onSettingsChanged?()
+    }
+
+    /// Explain the trade-off and confirm. Returns `true` if the user agreed.
+    private func confirmBackgroundMode() -> Bool {
+        let alert = NSAlert()
+        alert.messageText = "Hide the menu bar icon?"
+        alert.informativeText = """
+            Screenshot Renamer keeps running and renaming screenshots, but it \
+            will have no menu bar icon.
+
+            To open this window again, launch Screenshot Renamer from \
+            Applications or Spotlight.
+            """
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Hide Icon")
+        alert.addButton(withTitle: "Cancel")
+        return alert.runModal() == .alertFirstButtonReturn
+    }
+
+    @objc
+    private func quitApp() {
+        NSApp.terminate(nil)
+    }
+
+    @objc
     private func checkForUpdatesNow() {
         NSApp.activate(ignoringOtherApps: true)
         updateManager.updaterController.checkForUpdates(nil)
@@ -717,8 +789,54 @@ class SettingsWindowController: NSWindowController, NSTextFieldDelegate {
 
     func showWindow() {
         loadCurrentSettings()
+
+        // Normally the user got here by clicking the menu bar icon, which already
+        // made the app active. With the icon hidden there is no such click, and an
+        // `.accessory` app cannot reliably pull a window in front of the active
+        // app — so become a regular app for as long as this window is open.
+        var justElevated = false
+        if BackgroundModeManager.shared.isEnabled, !didElevateActivationPolicy {
+            NSApp.setActivationPolicy(.regular)
+            didElevateActivationPolicy = true
+            justElevated = true
+        }
+
+        // A policy change only takes effect on the next pass of the run loop —
+        // activating in the same turn leaves the window stranded behind whatever
+        // app is frontmost.
+        if justElevated {
+            DispatchQueue.main.async { [weak self] in self?.bringWindowToFront() }
+        } else {
+            bringWindowToFront()
+        }
+    }
+
+    private func bringWindowToFront() {
+        // Opened without a click to activate us first, an accessory app's window
+        // reliably lands *behind* the frontmost app even though AppKit reports it
+        // key. Float it so it actually reaches the screen; the level is dropped
+        // back to normal when the window closes.
+        if didElevateActivationPolicy {
+            window?.level = .floating
+        }
+
         NSApp.activate(ignoringOtherApps: true)
         window?.center()
         window?.makeKeyAndOrderFront(nil)
+        window?.orderFrontRegardless()
+
+        DebugLogger.shared.log(
+            "Settings window shown (visible=\(window?.isVisible ?? false), "
+            + "floating=\(didElevateActivationPolicy))",
+            category: "App"
+        )
+    }
+
+    /// Drop back to a dock-less accessory app once the window is dismissed.
+    func windowWillClose(_ notification: Notification) {
+        guard didElevateActivationPolicy else { return }
+        didElevateActivationPolicy = false
+        window?.level = .normal
+        NSApp.setActivationPolicy(.accessory)
     }
 }
