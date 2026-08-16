@@ -15,7 +15,8 @@ import os.log
 
 /// Controls the menu bar icon and menu
 class MenuBarController: NSObject {
-    private var statusItem: NSStatusItem!
+    private var statusItem: NSStatusItem?
+    private var menu: NSMenu!
     private var watcher: ScreenshotWatcher?
     private var settings: ScreenshotSettings!
     private var detector: ScreenshotDetector!
@@ -50,6 +51,7 @@ class MenuBarController: NSObject {
         updateManager = UpdateManager()
 
         setupMenuBar()
+        observeShowSettingsRequests()
         requestNotificationPermissions()
         loadSettings()
         if SettingsSnapshot.restoreIfNeeded(detector: detector) {
@@ -86,13 +88,46 @@ class MenuBarController: NSObject {
     private func setupMenuBar() {
         print("🔧 Setting up menu bar...")
 
-        // Create status item
-        statusItem = NSStatusBar.system.statusItem(
+        // The menu is built unconditionally — it outlives the status item so
+        // background mode can add and remove the item without rebuilding it.
+        buildMenu()
+        applyBackgroundMode()
+        print("✅ Menu built and attached")
+    }
+
+    /// Add or remove the status item to match the "run in background" preference.
+    ///
+    /// Deliberately add/remove rather than toggle `NSStatusItem.isVisible`: AppKit
+    /// persists that flag in UserDefaults (`NSStatusItem VisibleCC Item-0`), and a
+    /// build that doesn't know about background mode would inherit the hidden state
+    /// with no way to bring the icon back.
+    private func applyBackgroundMode() {
+        let hidden = BackgroundModeManager.shared.isEnabled
+
+        if hidden {
+            if let item = statusItem {
+                NSStatusBar.system.removeStatusItem(item)
+                statusItem = nil
+            }
+        } else if statusItem == nil {
+            createStatusItem()
+        }
+
+        DebugLogger.shared.log(
+            "Menu bar icon \(hidden ? "hidden (background mode)" : "visible")",
+            category: "App"
+        )
+    }
+
+    /// Create the status item, give it the camera icon, and attach the menu
+    private func createStatusItem() {
+        let item = NSStatusBar.system.statusItem(
             withLength: NSStatusItem.variableLength
         )
-        print("✅ Status item created: \(statusItem != nil)")
+        statusItem = item
+        print("✅ Status item created")
 
-        if let button = statusItem.button {
+        if let button = item.button {
             print("✅ Status item button exists")
 
             // Use SF Symbol camera icon (macOS 11+)
@@ -116,13 +151,34 @@ class MenuBarController: NSObject {
             print("❌ ERROR: Status item button is nil!")
         }
 
-        buildMenu()
-        print("✅ Menu built and attached")
+        item.menu = menu
+    }
+
+    /// Listen for requests to surface Settings — posted by a second launch of the
+    /// app, which is how a user gets back in with the menu bar icon hidden.
+    private func observeShowSettingsRequests() {
+        DistributedNotificationCenter.default().addObserver(
+            forName: .screenshotRenamerShowSettings,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            DebugLogger.shared.log("Show-settings request received from another launch", category: "App")
+            self?.showSettingsWindow()
+        }
+    }
+
+    /// Open the Settings window. Safe to call from any launch/reopen path.
+    func showSettingsWindow() {
+        Task { @MainActor in
+            DebugLogger.shared.log("Opening Settings window", category: "App")
+            openSettings()
+        }
     }
 
     /// Build the menu
     private func buildMenu() {
         let menu = NSMenu()
+        self.menu = menu
 
         // Watcher toggle
         watcherMenuItem = NSMenuItem(
@@ -222,8 +278,6 @@ class MenuBarController: NSObject {
         )
         quitItem.target = self
         menu.addItem(quitItem)
-
-        statusItem.menu = menu
     }
 
     /// Load screenshot settings from macOS
@@ -395,6 +449,7 @@ class MenuBarController: NSObject {
             stopWatcher()
         }
         loadSettings()
+        applyBackgroundMode()
         SettingsSnapshot.save()
         if wasRunning {
             try? startWatcher()

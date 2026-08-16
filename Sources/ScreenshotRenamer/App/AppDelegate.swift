@@ -18,6 +18,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if runningApps.count > 1 {
             print("⚠️ Another instance is already running. Exiting.")
             os_log("Another instance already running, terminating", log: .default, type: .info)
+            // Re-launching is the way back in when the menu bar icon is hidden
+            // (issue #33) — ask the live instance to show Settings before we go.
+            DebugLogger.shared.log(
+                "Second instance detected; asking running instance to show Settings",
+                category: "App"
+            )
+            DistributedNotificationCenter.default().postNotificationName(
+                .screenshotRenamerShowSettings,
+                object: nil,
+                userInfo: nil,
+                deliverImmediately: true
+            )
             NSApp.terminate(nil)
             return
         }
@@ -48,5 +60,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// Keep app running when all windows closed
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return false
+    }
+
+    /// Launch Services may activate this instance instead of starting a second
+    /// process. Treat that like the second-instance path: surface Settings, which
+    /// is the only reachable UI when running in background mode (issue #33).
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        DebugLogger.shared.log("Reopen requested (hasVisibleWindows=\(flag)), showing Settings", category: "App")
+        menuBarController?.showSettingsWindow()
+        return true
     }
 }

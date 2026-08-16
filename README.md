@@ -47,11 +47,12 @@ Requires macOS 11.0+ and Swift 5.7+. No external dependencies.
   - Save location (editable field or folder picker)
   - Thumbnail preview, mouse pointer, window shadow, date in filename toggles
   - Launch at login
+  - Run in background (hide the menu bar icon)
   - Format (PNG/JPG/PDF/TIFF)
   - Debug logging with custom log location
   - Reset to defaults
 - **Menu Quick-Reference** — current settings displayed in menu bar dropdown
-- **Single Instance** — prevents duplicate app instances from running
+- **Single Instance** — a second launch reopens Settings instead of starting a duplicate
 - **Native App Icon** — camera icon displays in Finder and About dialog
 - **Lightweight** — native Swift, no dependencies, instant startup
 
