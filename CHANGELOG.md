@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 - Bumped `github/codeql-action` 4.37.3 → 4.37.7 in the CodeQL workflow.
+- Extracted path display logic into `PathFormatter` with unit tests, replacing two untested private `shortenPath` copies. Fixes a latent bug where truncation ignored the requested maximum length.
+- Corrected stale CI/release documentation in `CLAUDE.md` and `CONTRIBUTING.md`, and documented `Scripts/install-hooks.sh`.
+
+### Removed
+- Deleted two dead scripts: `Scripts/generate-changelog.sh` (part of the automated release pipeline removed in 1.15.2; unreferenced and unable to emit the changelog sections this project uses) and `Scripts/test-rename.swift` (predates the Swift Package Manager restructure, no longer compiles, and is superseded by `ScreenshotRenamerTests`).
 
 ## [1.16.0] - 2026-08-16
 
