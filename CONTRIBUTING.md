@@ -23,6 +23,12 @@ Thank you for your interest in contributing to Screenshot Renamer! This document
    ```bash
    git remote add upstream https://github.com/tpak/ScreenshotRenamer.git
    ```
+4. Install the git hooks:
+   ```bash
+   ./Scripts/install-hooks.sh
+   ```
+   This installs a pre-commit hook that runs `swiftlint lint --strict`. CI runs the
+   same check, so without the hook a lint slip only surfaces after you push.
 
 ### Making Changes
 
@@ -117,20 +123,19 @@ chore: bump version to 1.1.0
 
 ### Continuous Integration
 
-Every push to `main` automatically triggers:
-- **Build and test** on macOS latest
-- **Creation of "latest" pre-release** with downloadable artifacts
-- **Security scanning** with CodeQL
+The `CI` workflow (`.github/workflows/swift.yml`) runs on every push to `main` and on
+every PR targeting `main`:
 
-Available at: https://github.com/tpak/ScreenshotRenamer/releases/tag/latest
+- **SwiftLint** (`--strict`) — must pass before the build job starts
+- **Build and test** on macOS latest (`swift build -c release`, then `swift test`)
+- **App bundle build** via `./Scripts/build-app.sh`, uploaded as an artifact with 7-day retention
 
-### Pull Request Validation
+CodeQL security analysis runs on its own schedule (weekly, Wednesdays at 03:17 UTC) and on
+manual dispatch — **not** on pushes or PRs, because the analysis is slow.
 
-Every PR triggers:
-- Full test suite
-- Build verification
-- CodeQL security analysis
-- 7-day artifact retention for review
+CI does not publish releases of any kind. An earlier workflow that pushed a rolling `latest`
+pre-release on every push to main was removed; releases come only from `Scripts/release.sh`
+(see below).
 
 ## Creating a Release
 
@@ -189,7 +194,7 @@ The script handles everything:
 
 1. Visit https://github.com/tpak/ScreenshotRenamer/releases
 2. Download and test on another Mac — should open without Gatekeeper warnings
-3. Test Homebrew install: `brew tap tpak/screenshotrenamer && brew install --cask screenshot-renamer`
+3. Test Homebrew install: `brew tap tpak/tpak && brew install --cask screenshot-renamer`
 4. Test Sparkle auto-update from the previous version
 
 ### Build Variants
