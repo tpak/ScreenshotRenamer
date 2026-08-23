@@ -448,8 +448,7 @@ class SettingsWindowController: NSWindowController, NSTextFieldDelegate, NSWindo
     }
 
     private func shortenPath(_ path: String) -> String {
-        let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
-        return path.replacingOccurrences(of: homeDir, with: "~")
+        PathFormatter.abbreviatingHome(path)
     }
 
     // MARK: - NSTextFieldDelegate

@@ -316,21 +316,8 @@ class MenuBarController: NSObject {
     }
 
     /// Shorten path for display
-    private func shortenPath(_ path: String, maxLength: Int = 40) -> String {
-        guard path.count > maxLength else { return path }
-
-        // Replace home directory with ~
-        let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
-        var shortened = path.replacingOccurrences(of: homeDir, with: "~")
-
-        // Still too long? Truncate middle
-        if shortened.count > maxLength {
-            let prefix = shortened.prefix(15)
-            let suffix = shortened.suffix(20)
-            shortened = "\(prefix)...\(suffix)"
-        }
-
-        return shortened
+    private func shortenPath(_ path: String, maxLength: Int = PathFormatter.defaultMaxLength) -> String {
+        PathFormatter.shortened(path, maxLength: maxLength)
     }
 
     /// Auto-start watcher on launch
