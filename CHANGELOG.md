@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **Sparkle updated 2.9.5 → 2.9.6** — upstream security release: hardens the installer when moving the downloaded archive, rejects package-based installs when signature validation fails, and closes a privilege-escalation path affecting Sparkle processes running as root.
+
+### Internal
+- Bumped `github/codeql-action` 4.37.3 → 4.37.7 in the CodeQL workflow.
+
 ## [1.16.0] - 2026-08-16
 
 ### Added
