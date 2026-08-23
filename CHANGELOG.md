@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.16.1] - 2026-08-23
+
 ### Security
 - **Sparkle updated 2.9.5 → 2.9.6** — upstream security release: hardens the installer when moving the downloaded archive, rejects package-based installs when signature validation fails, and closes a privilege-escalation path affecting Sparkle processes running as root.
 
@@ -271,7 +273,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Whitelist support for directory restrictions
 - Sandbox-ready architecture
 
-[Unreleased]: https://github.com/tpak/ScreenshotRenamer/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/tpak/ScreenshotRenamer/compare/v1.16.1...HEAD
+[1.16.1]: https://github.com/tpak/ScreenshotRenamer/compare/v1.16.0...v1.16.1
+[1.16.0]: https://github.com/tpak/ScreenshotRenamer/compare/v1.15.2...v1.16.0
+[1.15.2]: https://github.com/tpak/ScreenshotRenamer/compare/v1.15.1...v1.15.2
+[1.15.1]: https://github.com/tpak/ScreenshotRenamer/compare/v1.15.0...v1.15.1
+[1.15.0]: https://github.com/tpak/ScreenshotRenamer/compare/v1.14.2...v1.15.0
+[1.14.2]: https://github.com/tpak/ScreenshotRenamer/compare/v1.14.1...v1.14.2
 [1.12.0]: https://github.com/tpak/ScreenshotRenamer/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/tpak/ScreenshotRenamer/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/tpak/ScreenshotRenamer/compare/v1.9.1...v1.10.0
