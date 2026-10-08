@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-10-09
+
+### Changed
+- **Requires macOS 12 (Monterey) or later — macOS 11 (Big Sur) is no longer supported.** Sparkle 2.10, the framework that delivers updates, dropped Big Sur because current Xcode can no longer build for it. On Big Sur, 1.16.1 keeps working as before; it just won't be offered this or any later update, and Homebrew won't install it there.
+- **Sparkle updated 2.9.6 → 2.10.0** (#60) — reliability fixes: the update progress helper is no longer copied outside Sparkle's bundle, and the download progress bar falls back to the size in the appcast when the server doesn't report one. No new security fixes; everything fixed in 2.9.6 is retained.
+
 ### Internal
-- Bumped `github/codeql-action` 4.37.7 → 4.37.9 in the CodeQL workflow (#57). CI-only change; the shipped app is unaffected.
+- `Scripts/release.sh` now reads the minimum macOS from `Info.plist` for both the Sparkle appcast's `sparkle:minimumSystemVersion` (previously hardcoded to `11.0`) and the Homebrew cask's `depends_on macos:`. It refuses to release if the built binary's deployment target disagrees with `Info.plist`, states the requirement in the GitHub release notes, and its final verification checks the live appcast and cask. Without this, Sparkle would have offered Big Sur users an update that cannot launch.
+- Removed an always-true `#available(macOS 11.0, *)` check and its unreachable emoji menu bar icon fallback.
+- Bumped `github/codeql-action` 4.37.7 → 4.37.9 (#57) and 4.37.9 → 4.38.2 (#62) in the CodeQL workflow. CI-only changes; the shipped app is unaffected.
 
 ## [1.16.1] - 2026-08-23
 
@@ -276,7 +284,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Whitelist support for directory restrictions
 - Sandbox-ready architecture
 
-[Unreleased]: https://github.com/tpak/ScreenshotRenamer/compare/v1.16.1...HEAD
+[Unreleased]: https://github.com/tpak/ScreenshotRenamer/compare/v1.17.0...HEAD
+[1.17.0]: https://github.com/tpak/ScreenshotRenamer/compare/v1.16.1...v1.17.0
 [1.16.1]: https://github.com/tpak/ScreenshotRenamer/compare/v1.16.0...v1.16.1
 [1.16.0]: https://github.com/tpak/ScreenshotRenamer/compare/v1.15.2...v1.16.0
 [1.15.2]: https://github.com/tpak/ScreenshotRenamer/compare/v1.15.1...v1.15.2

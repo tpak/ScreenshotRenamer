@@ -54,6 +54,24 @@ if ! xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" &>/dev/null; 
     exit 1
 fi
 
+# Minimum macOS comes from Info.plist so the appcast and Homebrew cask can't
+# drift from what the bundle actually requires. An appcast that under-states it
+# makes Sparkle install a build the user's macOS cannot launch.
+INFO_PLIST="Sources/ScreenshotRenamer/Resources/Info.plist"
+MIN_MACOS="$(/usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" "$INFO_PLIST")"
+case "${MIN_MACOS%%.*}" in
+    11) CASK_MACOS="big_sur" ;;
+    12) CASK_MACOS="monterey" ;;
+    13) CASK_MACOS="ventura" ;;
+    14) CASK_MACOS="sonoma" ;;
+    15) CASK_MACOS="sequoia" ;;
+    26) CASK_MACOS="tahoe" ;;
+    *)
+        echo "Error: No Homebrew macOS symbol known for LSMinimumSystemVersion '$MIN_MACOS'"
+        exit 1
+        ;;
+esac
+
 SIGN_UPDATE=".build/artifacts/sparkle/Sparkle/bin/sign_update"
 if [[ ! -x "$SIGN_UPDATE" ]]; then
     echo "Error: Sparkle sign_update not found at $SIGN_UPDATE"
@@ -82,7 +100,7 @@ if [[ -n "$(git log origin/main..HEAD --oneline 2>/dev/null)" ]]; then
     git push origin main
 fi
 
-echo "── Version: $VERSION"
+echo "── Version: $VERSION (requires macOS $MIN_MACOS)"
 
 # ── Phase 3: Build & sign ──────────────────────────────────────────
 
@@ -92,6 +110,15 @@ echo "── Building release..."
 APP_NAME="ScreenshotRenamer.app"
 if [[ ! -d "$APP_NAME" ]]; then
     echo "Error: $APP_NAME not found after build"
+    exit 1
+fi
+
+# The binary's deployment target comes from Package.swift; MIN_MACOS comes from
+# Info.plist. Both must agree or the appcast and cask advertise the wrong minimum.
+BINARY_MIN_MACOS="$(xcrun vtool -show-build "$APP_NAME/Contents/MacOS/ScreenshotRenamer" \
+    | awk '/minos/ && !found { print $2; found = 1 }')"
+if [[ "$BINARY_MIN_MACOS" != "$MIN_MACOS" ]]; then
+    echo "Error: Binary requires macOS '$BINARY_MIN_MACOS' but Info.plist LSMinimumSystemVersion is '$MIN_MACOS'"
     exit 1
 fi
 
@@ -184,7 +211,9 @@ else
         COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges -10)
     fi
 
-    RELEASE_NOTES="## What's Changed
+    RELEASE_NOTES="**Requires macOS $MIN_MACOS or later.**
+
+## What's Changed
 
 $COMMITS
 
@@ -237,7 +266,7 @@ cat > "$PAGES_DIR/appcast.xml" <<APPCAST_EOF
       <pubDate>$PUB_DATE</pubDate>
       <sparkle:version>$VERSION</sparkle:version>
       <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
-      <sparkle:minimumSystemVersion>11.0</sparkle:minimumSystemVersion>
+      <sparkle:minimumSystemVersion>$MIN_MACOS</sparkle:minimumSystemVersion>
       <enclosure url="$DOWNLOAD_URL"
                  sparkle:edSignature="$ED_SIGNATURE"
                  length="$FILE_LENGTH"
@@ -302,6 +331,11 @@ else
 
     sed -i '' "s/version \"[^\"]*\"/version \"$VERSION\"/" "$CASK_FILE"
     sed -i '' "s/sha256 \"[^\"]*\"/sha256 \"$ZIP_SHA256\"/" "$CASK_FILE"
+    sed -i '' "s/depends_on macos: [^[:space:]]*/depends_on macos: :$CASK_MACOS/" "$CASK_FILE"
+    if ! grep -q "depends_on macos: :$CASK_MACOS\$" "$CASK_FILE"; then
+        echo "Error: Cask is missing 'depends_on macos: :$CASK_MACOS' after update"
+        exit 1
+    fi
 
     (cd "$TAP_DIR" && git add -A)
     if ! (cd "$TAP_DIR" && git diff --cached --quiet); then
@@ -337,6 +371,14 @@ fi
 LIVE_VERSION=$(curl -sf "$APPCAST_URL" | grep -o '<sparkle:version>[^<]*' | head -1 | sed 's/<sparkle:version>//')
 if [[ "$LIVE_VERSION" == "$VERSION" ]]; then
     echo "  [PASS] Sparkle appcast: v$LIVE_VERSION"
+    LIVE_MIN_MACOS=$(curl -sf "$APPCAST_URL" | grep -o '<sparkle:minimumSystemVersion>[^<]*' | head -1 \
+        | sed 's/<sparkle:minimumSystemVersion>//' || true)
+    if [[ "$LIVE_MIN_MACOS" == "$MIN_MACOS" ]]; then
+        echo "  [PASS] Sparkle appcast: minimum macOS $LIVE_MIN_MACOS"
+    else
+        echo "  [FAIL] Sparkle appcast: minimum macOS '$LIVE_MIN_MACOS' (expected $MIN_MACOS)"
+        PASS=false
+    fi
 else
     echo "  [WARN] Sparkle appcast: v$LIVE_VERSION (Pages cache may need up to 60s)"
     echo "         Verify: curl -s $APPCAST_URL | grep sparkle:version"
@@ -350,6 +392,14 @@ if gh repo view tpak/homebrew-tpak &>/dev/null; then
         echo "  [PASS] Homebrew Cask: v$CASK_VERSION"
     else
         echo "  [FAIL] Homebrew Cask: v$CASK_VERSION (expected v$VERSION)"
+        PASS=false
+    fi
+    CASK_DEPENDS=$(gh api repos/tpak/homebrew-tpak/contents/Casks/screenshot-renamer.rb \
+        -H "Accept: application/vnd.github.v3.raw" 2>/dev/null | grep -o 'depends_on macos: [^[:space:]]*' | head -1 || true)
+    if [[ "$CASK_DEPENDS" == "depends_on macos: :$CASK_MACOS" ]]; then
+        echo "  [PASS] Homebrew Cask: $CASK_DEPENDS"
+    else
+        echo "  [FAIL] Homebrew Cask: '$CASK_DEPENDS' (expected depends_on macos: :$CASK_MACOS)"
         PASS=false
     fi
 fi

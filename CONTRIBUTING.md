@@ -6,7 +6,7 @@ Thank you for your interest in contributing to Screenshot Renamer! This document
 
 ### Prerequisites
 
-- **macOS 11.0 (Big Sur)** or later
+- **macOS 12.0 (Monterey)** or later
 - **Xcode 14+** with command line tools
 - **Swift 5.7+**
 - **Git**
