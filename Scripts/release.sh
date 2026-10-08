@@ -79,6 +79,9 @@ if [[ ! -x "$SIGN_UPDATE" ]]; then
     exit 1
 fi
 
+# Last builds for dropped macOS versions, kept in the appcast after the new item
+LEGACY_ITEMS="$(cat Scripts/appcast-legacy-items.xml)"
+
 echo ""
 echo "=== Releasing Screenshot Renamer v$VERSION ==="
 echo ""
@@ -121,6 +124,17 @@ if [[ "$BINARY_MIN_MACOS" != "$MIN_MACOS" ]]; then
     echo "Error: Binary requires macOS '$BINARY_MIN_MACOS' but Info.plist LSMinimumSystemVersion is '$MIN_MACOS'"
     exit 1
 fi
+
+# AppKit picks linked-on-or-after behaviour from the binary's SDK stamp, so it
+# must be the SDK we built against, not the deployment target (see build-app.sh).
+BINARY_SDK="$(xcrun vtool -show-build "$APP_NAME/Contents/MacOS/ScreenshotRenamer" \
+    | awk '/ sdk / && !found { print $2; found = 1 }')"
+ACTIVE_SDK="$(xcrun --sdk macosx --show-sdk-version)"
+if [[ "$BINARY_SDK" != "$ACTIVE_SDK" ]]; then
+    echo "Error: Binary records SDK '$BINARY_SDK' but it was built with the macOS $ACTIVE_SDK SDK"
+    exit 1
+fi
+echo "  Binary: minimum macOS $BINARY_MIN_MACOS, SDK $BINARY_SDK"
 
 # ── Phase 4: Notarize ──────────────────────────────────────────────
 
@@ -272,6 +286,7 @@ cat > "$PAGES_DIR/appcast.xml" <<APPCAST_EOF
                  length="$FILE_LENGTH"
                  type="application/octet-stream" />
     </item>
+$LEGACY_ITEMS
   </channel>
 </rss>
 APPCAST_EOF
@@ -293,7 +308,7 @@ rm -rf "$PAGES_DIR"
 echo "── Verifying appcast deployment..."
 RETRIES=6
 for i in $(seq 1 $RETRIES); do
-    LIVE_VERSION=$(curl -sf "$APPCAST_URL" | grep -o '<sparkle:version>[^<]*' | head -1 | sed 's/<sparkle:version>//')
+    LIVE_VERSION=$(curl -sf "$APPCAST_URL" | grep -o '<sparkle:version>[^<]*' | head -1 | sed 's/<sparkle:version>//' || true)
     if [[ "$LIVE_VERSION" == "$VERSION" ]]; then
         echo "  Appcast verified: v$LIVE_VERSION"
         break
@@ -368,7 +383,7 @@ else
 fi
 
 # Appcast
-LIVE_VERSION=$(curl -sf "$APPCAST_URL" | grep -o '<sparkle:version>[^<]*' | head -1 | sed 's/<sparkle:version>//')
+LIVE_VERSION=$(curl -sf "$APPCAST_URL" | grep -o '<sparkle:version>[^<]*' | head -1 | sed 's/<sparkle:version>//' || true)
 if [[ "$LIVE_VERSION" == "$VERSION" ]]; then
     echo "  [PASS] Sparkle appcast: v$LIVE_VERSION"
     LIVE_MIN_MACOS=$(curl -sf "$APPCAST_URL" | grep -o '<sparkle:minimumSystemVersion>[^<]*' | head -1 \
@@ -387,7 +402,7 @@ fi
 # Homebrew
 if gh repo view tpak/homebrew-tpak &>/dev/null; then
     CASK_VERSION=$(gh api repos/tpak/homebrew-tpak/contents/Casks/screenshot-renamer.rb \
-        -H "Accept: application/vnd.github.v3.raw" 2>/dev/null | grep -o 'version "[^"]*"' | head -1 | cut -d'"' -f2)
+        -H "Accept: application/vnd.github.v3.raw" 2>/dev/null | grep -o 'version "[^"]*"' | head -1 | cut -d'"' -f2 || true)
     if [[ "$CASK_VERSION" == "$VERSION" ]]; then
         echo "  [PASS] Homebrew Cask: v$CASK_VERSION"
     else

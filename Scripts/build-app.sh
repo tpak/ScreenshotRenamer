@@ -43,8 +43,15 @@ trap 'mv -f "$PLIST_BACKUP" "$PLIST_PATH"' EXIT
 # Inject version into Info.plist
 ./Scripts/inject-version.sh
 
-# Build release binary
-swift build -c release
+# Build release binary. Pass the SDK to the link step explicitly: SwiftPM's
+# swiftbuild backend links via clang with --sysroot, so clang never reads the
+# SDK's version and stamps the binary's SDK as the deployment target (e.g. 12.0).
+# AppKit gates behaviour on that stamp, so the app would run as if built
+# against the oldest supported SDK.
+SDK_PATH="$(xcrun --sdk macosx --show-sdk-path)"
+swift build -c release \
+    -Xswiftc -Xclang-linker -Xswiftc -isysroot \
+    -Xswiftc -Xclang-linker -Xswiftc "$SDK_PATH"
 
 # Create .app bundle structure
 APP_NAME="ScreenshotRenamer.app"
