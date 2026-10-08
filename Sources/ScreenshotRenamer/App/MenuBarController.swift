@@ -130,23 +130,17 @@ class MenuBarController: NSObject {
         if let button = item.button {
             print("✅ Status item button exists")
 
-            // Use SF Symbol camera icon (macOS 11+)
-            if #available(macOS 11.0, *) {
-                let config = NSImage.SymbolConfiguration(
-                    pointSize: 0,
-                    weight: .regular
-                )
-                button.image = NSImage(
-                    systemSymbolName: "camera.fill",
-                    accessibilityDescription: "Screenshot Renamer"
-                )?.withSymbolConfiguration(config)
-                button.image?.isTemplate = true
-                print("✅ SF Symbol icon set")
-            } else {
-                // Fallback for older macOS
-                button.title = "📷"
-                print("✅ Emoji icon set")
-            }
+            // Use SF Symbol camera icon
+            let config = NSImage.SymbolConfiguration(
+                pointSize: 0,
+                weight: .regular
+            )
+            button.image = NSImage(
+                systemSymbolName: "camera.fill",
+                accessibilityDescription: "Screenshot Renamer"
+            )?.withSymbolConfiguration(config)
+            button.image?.isTemplate = true
+            print("✅ SF Symbol icon set")
         } else {
             print("❌ ERROR: Status item button is nil!")
         }

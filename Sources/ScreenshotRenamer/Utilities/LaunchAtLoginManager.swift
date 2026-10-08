@@ -17,7 +17,7 @@ final class LaunchAtLoginManager {
         if #available(macOS 13.0, *) {
             return SMAppService.mainApp.status == .enabled
         } else {
-            // For macOS 11-12, check legacy LaunchAgents
+            // For macOS 12, check legacy LaunchAgents
             return isEnabledLegacy()
         }
     }
@@ -100,7 +100,7 @@ final class LaunchAtLoginManager {
         }
     }
 
-    // MARK: - Private Methods (macOS 11-12 Legacy)
+    // MARK: - Private Methods (macOS 12 Legacy)
 
     private func isEnabledLegacy() -> Bool {
         let launchAgentPath = getLaunchAgentPath()

@@ -13,6 +13,8 @@ Also handles 24-hour timestamps (prefix lowercasing) and parenthesized sequence 
 
 ## Installation
 
+Requires macOS 12 (Monterey) or later. On macOS 11 (Big Sur), use [v1.16.1](https://github.com/tpak/ScreenshotRenamer/releases/tag/v1.16.1), the last release that supports it.
+
 ### Homebrew (Recommended)
 
 ```bash
@@ -37,7 +39,7 @@ cd ScreenshotRenamer
 open ScreenshotRenamer.app
 ```
 
-Requires macOS 11.0+ and Swift 5.7+. No external dependencies.
+Requires macOS 12.0+ and Swift 5.7+. Swift Package Manager fetches the only dependency, [Sparkle](https://sparkle-project.org), automatically.
 
 ## Features
 
