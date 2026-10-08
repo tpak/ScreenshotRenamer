@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed an always-true `#available(macOS 11.0, *)` check and its unreachable emoji menu bar icon fallback.
 - The appcast now keeps the final Big Sur build (1.16.1) as a second item, maintained in `Scripts/appcast-legacy-items.xml`, so Sparkle can still offer it to Big Sur Macs on older versions.
 - Release builds now record the actual macOS SDK they were built against. Under Swift 6.4, SwiftPM's new default build system records the deployment target instead, so AppKit would have treated the app as built against the macOS 12 SDK and applied that era's defaults. `Scripts/build-app.sh` now passes the SDK to the linker, and `release.sh` refuses to ship a binary whose recorded SDK doesn't match.
-- `release.sh`'s post-publish checks no longer abort the script on a transient network error.
+- `release.sh`'s appcast check and final verification report a transient network error as a warning or failure instead of aborting the script after the release is already published.
 - Bumped `github/codeql-action` 4.37.7 → 4.37.9 (#57) and 4.37.9 → 4.38.2 (#62) in the CodeQL workflow. CI-only changes; the shipped app is unaffected.
 
 ## [1.16.1] - 2026-08-23

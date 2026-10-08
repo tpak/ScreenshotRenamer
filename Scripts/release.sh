@@ -374,7 +374,7 @@ echo "── Final verification ──"
 PASS=true
 
 # GitHub release
-ASSET_COUNT=$(gh release view "v$VERSION" --json assets --jq '.assets | length')
+ASSET_COUNT=$(gh release view "v$VERSION" --json assets --jq '.assets | length' || echo 0)
 if [[ "$ASSET_COUNT" -ge 4 ]]; then
     echo "  [PASS] GitHub release: v$VERSION with $ASSET_COUNT assets"
 else
