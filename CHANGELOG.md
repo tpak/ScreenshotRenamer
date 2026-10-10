@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.17.1] - 2026-10-10
+
+### Changed
+- **Homebrew now refuses to install on Intel Macs.** Release builds have always been Apple silicon only; the cask now declares that (`depends_on arch: :arm64`), so an Intel Mac gets a clear error instead of an app that won't launch.
+
+### Fixed
+- The user guide no longer says the app isn't notarized or tells you to bypass Gatekeeper; releases have been signed and notarized by Apple since March 2026. It now also covers installing with Homebrew.
+- The README and user guide now state that an Apple silicon Mac is required.
+- The README and user guide now explain that versions 1.3.0–1.5.2 check an update address that stopped working when the project was renamed, and need one manual download to start updating again (v1.16.1 on Big Sur).
+- Corrected the test count (106) in the README, `CONTRIBUTING.md` and `CLAUDE.md`, and brought the per-suite breakdown up to date.
+
+### Internal
+- `Scripts/release.sh` builds the DMG with `diskutil image create`, since `hdiutil create` is deprecated as of macOS 27. The DMG is unchanged: compressed (UDZO), volume named "Screenshot Renamer", app at the root.
+- `Scripts/release.sh` sets the cask's `depends_on arch:` from the architectures in the built binary, like the minimum macOS, and its final verification checks it. A future universal build drops the restriction automatically.
+
 ## [1.17.0] - 2026-10-09
 
 ### Changed
@@ -287,7 +302,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Whitelist support for directory restrictions
 - Sandbox-ready architecture
 
-[Unreleased]: https://github.com/tpak/ScreenshotRenamer/compare/v1.17.0...HEAD
+[Unreleased]: https://github.com/tpak/ScreenshotRenamer/compare/v1.17.1...HEAD
+[1.17.1]: https://github.com/tpak/ScreenshotRenamer/compare/v1.17.0...v1.17.1
 [1.17.0]: https://github.com/tpak/ScreenshotRenamer/compare/v1.16.1...v1.17.0
 [1.16.1]: https://github.com/tpak/ScreenshotRenamer/compare/v1.16.0...v1.16.1
 [1.16.0]: https://github.com/tpak/ScreenshotRenamer/compare/v1.15.2...v1.16.0

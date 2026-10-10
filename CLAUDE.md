@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Test Commands
 - **Build:** `swift build`
-- **Test all:** `swift test` (95 tests, ~9 seconds)
+- **Test all:** `swift test` (106 tests, ~9 seconds)
 - **Test single:** `swift test --filter ScreenshotRenamerTests.PatternMatcherTests/testDefaultPattern`
 - **Build app bundle:** `./Scripts/build-app.sh`
 - **Lint:** `swiftlint lint --strict` (also runs as a pre-commit hook — install it once with `./Scripts/install-hooks.sh`)
