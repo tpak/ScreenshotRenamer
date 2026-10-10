@@ -224,14 +224,18 @@ swift test --verbose
 
 We maintain comprehensive test coverage:
 - Pattern matching (22 tests)
+- Screenshot detection (16 tests)
 - File validation (12 tests)
-- Screenshot detection (11 tests)
+- Path formatting (11 tests)
 - Launch at login (10 tests)
 - Screenshot renaming (9 tests)
+- Debug logger (7 tests)
+- Background mode (6 tests)
 - Shell command execution (5 tests)
-- Debug logger (5 tests)
+- Update manager (5 tests)
+- Screenshot watcher (3 tests)
 
-**Total: 79 tests**
+**Total: 106 tests**
 
 ### Writing Tests
 

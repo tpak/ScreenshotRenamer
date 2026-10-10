@@ -136,6 +136,20 @@ if [[ "$BINARY_SDK" != "$ACTIVE_SDK" ]]; then
 fi
 echo "  Binary: minimum macOS $BINARY_MIN_MACOS, SDK $BINARY_SDK"
 
+# The cask's arch constraint mirrors the architectures actually shipped, so
+# Homebrew refuses installs the binary can't run (empty = universal, no limit).
+BINARY_ARCHS="$(lipo -archs "$APP_NAME/Contents/MacOS/ScreenshotRenamer")"
+case "$BINARY_ARCHS" in
+    arm64) CASK_ARCH="arm64" ;;
+    x86_64) CASK_ARCH="x86_64" ;;
+    "x86_64 arm64" | "arm64 x86_64") CASK_ARCH="" ;;
+    *)
+        echo "Error: Unexpected binary architectures '$BINARY_ARCHS'"
+        exit 1
+        ;;
+esac
+echo "  Architectures: $BINARY_ARCHS"
+
 # ── Phase 4: Notarize ──────────────────────────────────────────────
 
 RELEASE_DIR="/tmp/screenshotrenamer-release"
@@ -189,10 +203,14 @@ echo "  Length: $FILE_LENGTH"
 
 DMG_PATH="$RELEASE_DIR/ScreenshotRenamer.dmg"
 echo "── Creating DMG..."
-hdiutil create -volname "Screenshot Renamer" \
-    -srcfolder "$APP_NAME" \
-    -ov -format UDZO \
-    "$DMG_PATH"
+# diskutil images a folder's contents, so stage the app inside a folder to keep
+# ScreenshotRenamer.app at the volume root. (hdiutil create is deprecated.)
+DMG_STAGING="$RELEASE_DIR/dmg-staging"
+mkdir -p "$DMG_STAGING"
+ditto "$APP_NAME" "$DMG_STAGING/$APP_NAME"
+diskutil image create from --format UDZO --volumeName "Screenshot Renamer" \
+    "$DMG_STAGING" "$DMG_PATH"
+rm -rf "$DMG_STAGING"
 
 echo "── Generating checksums..."
 (cd "$RELEASE_DIR" && shasum -a 256 ScreenshotRenamer.zip > ScreenshotRenamer.zip.sha256)
@@ -351,6 +369,17 @@ else
         echo "Error: Cask is missing 'depends_on macos: :$CASK_MACOS' after update"
         exit 1
     fi
+    sed -i '' "/depends_on arch: /d" "$CASK_FILE"
+    if [[ -n "$CASK_ARCH" ]]; then
+        awk -v line="  depends_on arch: :$CASK_ARCH" \
+            '{ print } /^  depends_on macos: / && !done { print line; done = 1 }' \
+            "$CASK_FILE" > "$CASK_FILE.tmp"
+        mv "$CASK_FILE.tmp" "$CASK_FILE"
+        if ! grep -q "^  depends_on arch: :$CASK_ARCH\$" "$CASK_FILE"; then
+            echo "Error: Cask is missing 'depends_on arch: :$CASK_ARCH' after update"
+            exit 1
+        fi
+    fi
 
     (cd "$TAP_DIR" && git add -A)
     if ! (cd "$TAP_DIR" && git diff --cached --quiet); then
@@ -415,6 +444,18 @@ if gh repo view tpak/homebrew-tpak &>/dev/null; then
         echo "  [PASS] Homebrew Cask: $CASK_DEPENDS"
     else
         echo "  [FAIL] Homebrew Cask: '$CASK_DEPENDS' (expected depends_on macos: :$CASK_MACOS)"
+        PASS=false
+    fi
+    CASK_ARCH_LINE=$(gh api repos/tpak/homebrew-tpak/contents/Casks/screenshot-renamer.rb \
+        -H "Accept: application/vnd.github.v3.raw" 2>/dev/null | grep -o 'depends_on arch: [^[:space:]]*' | head -1 || true)
+    EXPECTED_ARCH_LINE=""
+    if [[ -n "$CASK_ARCH" ]]; then
+        EXPECTED_ARCH_LINE="depends_on arch: :$CASK_ARCH"
+    fi
+    if [[ "$CASK_ARCH_LINE" == "$EXPECTED_ARCH_LINE" ]]; then
+        echo "  [PASS] Homebrew Cask: ${CASK_ARCH_LINE:-no arch restriction (universal)}"
+    else
+        echo "  [FAIL] Homebrew Cask: arch '$CASK_ARCH_LINE' (expected '${EXPECTED_ARCH_LINE:-none}')"
         PASS=false
     fi
 fi

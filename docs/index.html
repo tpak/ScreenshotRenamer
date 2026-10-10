@@ -130,27 +130,22 @@
 <h2>Getting Started</h2>
 
 <h3>Download &amp; Install</h3>
-<p><strong>Requirements:</strong> macOS 12 (Monterey) or later. On macOS 11 (Big Sur), use
+<p><strong>Requirements:</strong> a Mac with Apple silicon running macOS 12 (Monterey) or later.
+   Intel Macs are not supported. On macOS 11 (Big Sur), use
    <a href="https://github.com/tpak/ScreenshotRenamer/releases/tag/v1.16.1">version 1.16.1</a>,
    the last release that supports it.</p>
+<p>The easiest way to install is with <a href="https://brew.sh">Homebrew</a>:</p>
+<pre class="example">brew tap tpak/tpak
+brew install --cask screenshot-renamer</pre>
+<p>Or install it manually:</p>
 <ol>
     <li>Download the latest <strong>DMG</strong> or <strong>ZIP</strong> from the
         <a href="https://github.com/tpak/ScreenshotRenamer/releases/latest">Releases page</a>.</li>
     <li>If you downloaded the DMG, open it and drag <strong>Screenshot Renamer</strong> to your
         Applications folder. If you downloaded the ZIP, unzip it and move the app to Applications.</li>
-    <li>Double-click the app to launch it. Because the app is not notarized, macOS Gatekeeper
-        will block it on first launch.</li>
+    <li>Double-click the app to launch it. The app is signed and notarized by Apple, so it opens
+        without Gatekeeper warnings.</li>
 </ol>
-
-<h3>Bypassing Gatekeeper</h3>
-<p>Since the app is distributed outside the Mac App Store without notarization, macOS will show
-   a warning the first time you open it. To allow it:</p>
-<ol>
-    <li>Right-click (or Control-click) on <strong>Screenshot Renamer.app</strong> in Finder.</li>
-    <li>Select <strong>Open</strong> from the context menu.</li>
-    <li>Click <strong>Open</strong> in the confirmation dialog.</li>
-</ol>
-<p>You only need to do this once. After that, the app opens normally.</p>
 
 <h3>First Launch</h3>
 <p>
@@ -278,6 +273,12 @@
 <p>Quick Rename scans the current screenshot folder for files matching the 12-hour pattern.
    If all files are already in 24-hour format or use a different naming pattern, there is
    nothing to rename.</p>
+
+<h3>Updates are not found</h3>
+<p>Versions 1.3.0 through 1.5.2 (February 2026) check an update address that stopped working
+   when the project was renamed, so they never find new versions. Download the latest release
+   from the <a href="https://github.com/tpak/ScreenshotRenamer/releases/latest">Releases page</a>
+   once; automatic updates work again from then on.</p>
 
 <h3>Using the debug log</h3>
 <p>If something isn't working as expected, enable debug logging in Settings. The log records

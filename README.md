@@ -13,7 +13,7 @@ Also handles 24-hour timestamps (prefix lowercasing) and parenthesized sequence 
 
 ## Installation
 
-Requires macOS 12 (Monterey) or later. On macOS 11 (Big Sur), use [v1.16.1](https://github.com/tpak/ScreenshotRenamer/releases/tag/v1.16.1), the last release that supports it.
+Requires a Mac with Apple silicon running macOS 12 (Monterey) or later. Intel Macs are not supported. On macOS 11 (Big Sur), use [v1.16.1](https://github.com/tpak/ScreenshotRenamer/releases/tag/v1.16.1), the last release that supports it.
 
 ### Homebrew (Recommended)
 
@@ -23,6 +23,8 @@ brew install --cask screenshot-renamer
 ```
 
 The app is code-signed and notarized by Apple — no Gatekeeper warnings. Sparkle handles updates automatically after install.
+
+Versions 1.3.0–1.5.2 (February 2026) check an update address that stopped working when the project was renamed. If you're on one of them, download the latest release once and automatic updates resume.
 
 ### Download
 
@@ -77,7 +79,7 @@ The app auto-detects your macOS screenshot location and prefix via `com.apple.sc
 ## Development
 
 ```bash
-swift test                      # Run all 79 tests
+swift test                      # Run all 106 tests
 swift build                     # Debug build
 ./Scripts/build-app.sh          # Build app bundle (ad-hoc signed)
 ./Scripts/build-app.sh --sign   # Build with Developer ID signing
