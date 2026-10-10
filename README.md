@@ -24,7 +24,7 @@ brew install --cask screenshot-renamer
 
 The app is code-signed and notarized by Apple — no Gatekeeper warnings. Sparkle handles updates automatically after install.
 
-Versions 1.3.0–1.5.2 (February 2026) check an update address that stopped working when the project was renamed. If you're on one of them, download the latest release once and automatic updates resume.
+Versions 1.3.0–1.5.2 (February 2026) check an update address that stopped working when the project was renamed. If you're on one of them, download the latest release once (on macOS 11 Big Sur, [v1.16.1](https://github.com/tpak/ScreenshotRenamer/releases/tag/v1.16.1) instead) and automatic updates resume.
 
 ### Download
 

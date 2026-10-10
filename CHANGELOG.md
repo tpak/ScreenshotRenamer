@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - The user guide no longer says the app isn't notarized or tells you to bypass Gatekeeper; releases have been signed and notarized by Apple since March 2026. It now also covers installing with Homebrew.
 - The README and user guide now state that an Apple silicon Mac is required.
-- The README and user guide now explain that versions 1.3.0–1.5.2 check an update address that stopped working when the project was renamed, and need one manual download to start updating again.
+- The README and user guide now explain that versions 1.3.0–1.5.2 check an update address that stopped working when the project was renamed, and need one manual download to start updating again (v1.16.1 on Big Sur).
 - Corrected the test count (106) in the README, `CONTRIBUTING.md` and `CLAUDE.md`, and brought the per-suite breakdown up to date.
 
 ### Internal

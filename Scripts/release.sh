@@ -372,7 +372,7 @@ else
     sed -i '' "/depends_on arch: /d" "$CASK_FILE"
     if [[ -n "$CASK_ARCH" ]]; then
         awk -v line="  depends_on arch: :$CASK_ARCH" \
-            '{ print } /^  depends_on macos: / && !done { print line; done = 1 }' \
+            '/^  depends_on macos: / && !done { print line; done = 1 } { print }' \
             "$CASK_FILE" > "$CASK_FILE.tmp"
         mv "$CASK_FILE.tmp" "$CASK_FILE"
         if ! grep -q "^  depends_on arch: :$CASK_ARCH\$" "$CASK_FILE"; then
