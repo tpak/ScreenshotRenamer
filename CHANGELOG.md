@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Internal
+- `Scripts/release.sh` now shows notarytool's actual error when its pre-flight notarization check fails, instead of always saying "Notarization credentials not found". It also says what to do: for an expired Apple developer agreement (HTTP 403), accept it at developer.apple.com; for a locked screen, which hides the credentials, unlock and re-run. The `store-credentials` instructions now appear only when the profile seems genuinely missing. The 1.17.2 release first failed on an expired agreement that the old message called missing credentials.
+- `Scripts/release.sh` also prints stapler's own reason when stapler validation fails.
+
 ## [1.17.2] - 2026-11-16
 
 ### Fixed

@@ -152,7 +152,7 @@ We use [Semantic Versioning](https://semver.org/):
 Releases are done locally (not in CI) because they require code signing and notarization:
 
 - **Developer ID Application certificate** in your Keychain
-- **Notarization credentials** stored via `xcrun notarytool store-credentials "screenshotrenamer-notary"`
+- **Notarization credentials** stored via `xcrun notarytool store-credentials "screenshotrenamer-notary"`. Run releases on an unlocked Mac: notarytool can't read the profile while the screen is locked. Apple also refuses notarization (HTTP 403) until the account holder accepts any updated developer agreement at https://developer.apple.com/account. `release.sh` checks both before it builds anything.
 - **Sparkle EdDSA private key** in your Keychain (for update signing)
 
 ### Release Process

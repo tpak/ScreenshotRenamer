@@ -47,10 +47,30 @@ if ! security find-identity -v -p codesigning | grep -q "$SIGN_IDENTITY"; then
 fi
 
 NOTARY_PROFILE="screenshotrenamer-notary"
-if ! xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" &>/dev/null; then
-    echo "Error: Notarization credentials not found. Run:"
-    echo "  xcrun notarytool store-credentials \"$NOTARY_PROFILE\" \\"
-    echo "    --apple-id YOUR_APPLE_ID --team-id YOUR_TEAM_ID --password APP_SPECIFIC_PASSWORD"
+# Keep notarytool's own message. A missing profile, a locked Mac and an
+# expired Apple agreement all fail this check, and each needs a different fix.
+if ! NOTARY_CHECK="$(xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" 2>&1)"; then
+    echo "Error: notarytool can't use the '$NOTARY_PROFILE' profile. It reported:"
+    echo "$NOTARY_CHECK" | sed 's/^/  /'
+    case "$NOTARY_CHECK" in
+        *agreement*)
+            echo "Apple requires an updated agreement before it will notarize. The account"
+            echo "holder must accept it at https://developer.apple.com/account, then re-run."
+            ;;
+        *"No Keychain password item found"*)
+            # notarytool can't read its credentials while the screen is locked,
+            # and reports that exactly like a missing profile.
+            CONSOLE_STATE="$(ioreg -n Root -d1 2>/dev/null || true)"
+            if [[ "$CONSOLE_STATE" == *'"CGSSessionScreenIsLocked"=Yes'* ]]; then
+                echo "The screen is locked, which hides the profile from notarytool."
+                echo "Unlock the Mac and re-run; the credentials are most likely fine."
+            else
+                echo "If the profile really is missing, create it:"
+                echo "  xcrun notarytool store-credentials \"$NOTARY_PROFILE\" \\"
+                echo "    --apple-id YOUR_APPLE_ID --team-id YOUR_TEAM_ID --password APP_SPECIFIC_PASSWORD"
+            fi
+            ;;
+    esac
     exit 1
 fi
 
@@ -167,8 +187,9 @@ echo "── Stapling notarization ticket..."
 xcrun stapler staple "$APP_NAME"
 
 # Verify staple
-if ! xcrun stapler validate "$APP_NAME" &>/dev/null; then
-    echo "Error: Stapler validation failed"
+if ! STAPLER_CHECK="$(xcrun stapler validate "$APP_NAME" 2>&1)"; then
+    echo "Error: Stapler validation failed. It reported:"
+    echo "$STAPLER_CHECK" | sed 's/^/  /'
     exit 1
 fi
 
