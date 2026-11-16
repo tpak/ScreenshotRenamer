@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.17.2] - 2026-11-16
+
+### Fixed
+- **Sparkle updated 2.10.0 → 2.10.1** (#67) — bug fixes in the framework that delivers updates: an update is no longer installed too early when the app sits in a folder whose name uses NFC-encoded Unicode characters, whitespace around the release-notes link in the appcast is now ignored, and appcast elements are read correctly when the Sparkle namespace uses a custom prefix. Also adds and updates several translations. macOS 12 is still the minimum; no security fixes.
+
+### Internal
+- Bumped `github/codeql-action` 4.38.2 → 4.39.3 (#68) in the CodeQL workflow. CI-only change; the shipped app is unaffected.
+
 ## [1.17.1] - 2026-10-10
 
 ### Changed
